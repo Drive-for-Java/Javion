@@ -1,3 +1,6 @@
+console.log("TOKEN exists:", process.env.TOKEN ? true : false);
+console.log("CLIENT_ID exists:", process.env.CLIENT_ID ? true : false);
+
 const express = require('express');
 const app = express();
 
