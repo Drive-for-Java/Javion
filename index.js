@@ -1,3 +1,21 @@
+const express = require('express');
+const app = express();
+
+/* RENDER PORT FIX */
+
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Javion is running!');
+});
+
+app.listen(PORT, () => {
+  console.log("Web server started");
+});
+
+
+/* DISCORD BOT */
+
 const { Client, GatewayIntentBits, SlashCommandBuilder, Routes, REST } = require("discord.js");
 require("dotenv").config();
 const fs = require("fs");
@@ -17,7 +35,7 @@ const SUGGESTION_CHANNEL = "1475107874144518217";
 const XP_CHANNEL = "1433107389476769952";
 const COUNT_CHANNEL = "1475107452709241004";
 
-/* CREATE FILES IF MISSING */
+/* CREATE FILES */
 
 if (!fs.existsSync("xp.json"))
 fs.writeFileSync("xp.json","{}");
