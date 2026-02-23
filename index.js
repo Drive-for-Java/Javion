@@ -353,4 +353,10 @@ process.env.CLIENT_ID
 })();
 
 
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN)
+  .then(() => {
+    console.log("Discord login succeeded!");
+  })
+  .catch(err => {
+    console.error("Discord login failed:", err);
+  });
