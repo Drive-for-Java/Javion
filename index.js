@@ -1,19 +1,4 @@
 
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-
-// Simple endpoint for UptimeRobot ping
-app.get('/', (req, res) => {
-  res.send('Javion is running!');
-});
-
-app.listen(PORT, () => {
-  console.log(`Web server started on port ${PORT}`);
-});
-
-
 require("dotenv").config();
 console.log("TOKEN exists:", process.env.TOKEN ? true : false);
 console.log("CLIENT_ID exists:", process.env.CLIENT_ID ? true : false);
