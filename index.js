@@ -1,6 +1,4 @@
-// =======================
-// 1️⃣ EXPRESS SERVER
-// =======================
+
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,16 +12,12 @@ app.listen(PORT, () => {
   console.log(`Web server started on port ${PORT}`);
 });
 
-// =======================
-// 2️⃣ DOTENV
-// =======================
+
 require("dotenv").config();
 console.log("TOKEN exists:", process.env.TOKEN ? true : false);
 console.log("CLIENT_ID exists:", process.env.CLIENT_ID ? true : false);
 
-// =======================
-// 3️⃣ DISCORD BOT
-// =======================
+
 const { Client, GatewayIntentBits, SlashCommandBuilder, Routes, REST } = require("discord.js");
 const fs = require("fs");
 
@@ -35,17 +29,13 @@ const client = new Client({
   ]
 });
 
-// =======================
-// 4️⃣ CHANNEL IDS
-// =======================
+
 const REACTION_CHANNEL = "1431294508015816837";
 const SUGGESTION_CHANNEL = "1475107874144518217";
 const XP_CHANNEL = "1433107389476769952";
 const COUNT_CHANNEL = "1475107452709241004";
 
-// =======================
-// 5️⃣ CREATE FILES IF MISSING
-// =======================
+
 if (!fs.existsSync("xp.json")) fs.writeFileSync("xp.json", "{}");
 
 if (!fs.existsSync("count.json")) {
@@ -55,16 +45,12 @@ if (!fs.existsSync("count.json")) {
   }));
 }
 
-// =======================
-// 6️⃣ READY EVENT
-// =======================
+
 client.once("ready", () => {
   console.log(`Javion is online as ${client.user.tag}`);
 });
 
-// =======================
-// 7️⃣ MESSAGE HANDLER
-// =======================
+
 client.on("messageCreate", async msg => {
   if (msg.author.bot) return;
 
@@ -104,9 +90,7 @@ client.on("messageCreate", async msg => {
   }
 });
 
-// =======================
-// 8️⃣ SLASH COMMANDS
-// =======================
+
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -162,9 +146,7 @@ Java is a powerful programming language.
   }
 });
 
-// =======================
-// 9️⃣ REGISTER SLASH COMMANDS
-// =======================
+
 const commands = [
   new SlashCommandBuilder().setName("info").setDescription("Bot info"),
   new SlashCommandBuilder().setName("server").setDescription("Server info"),
@@ -193,9 +175,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   }
 })();
 
-// =======================
-// 10️⃣ LOGIN
-// =======================
+
 client.login(process.env.TOKEN)
   .then(() => console.log("Discord login succeeded!"))
   .catch(err => console.error("Discord login failed:", err));
