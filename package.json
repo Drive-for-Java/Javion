@@ -1,14 +1,13 @@
 {
-  "name": "javion",
-  "version": "1.0.0",
-  "description": "Javion Discord Bot",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "discord.js": "^14.0.0",
-    "dotenv": "^16.0.0",
-    "express": "^4.18.2"
-  }
+ "name":"javion",
+ "version":"1.0.0",
+ "main":"index.js",
+ "scripts":{
+  "start":"node index.js"
+ },
+ "dependencies":{
+  "discord.js":"^14.0.0",
+  "dotenv":"^16.0.0",
+  "express":"^4.18.2"
+ }
 }
