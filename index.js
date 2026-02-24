@@ -1,3 +1,5 @@
+console.log("TOKEN exists:",process.env.TOKEN?true:false);
+
 require("dotenv").config();
 
 const {
