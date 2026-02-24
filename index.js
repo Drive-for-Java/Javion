@@ -1,165 +1,500 @@
-
 require("dotenv").config();
-console.log("TOKEN exists:", process.env.TOKEN ? true : false);
-console.log("CLIENT_ID exists:", process.env.CLIENT_ID ? true : false);
+
+const {
+Client,
+GatewayIntentBits,
+SlashCommandBuilder,
+Routes,
+REST,
+EmbedBuilder
+} = require("discord.js");
+
+const fs=require("fs");
 
 
-const { Client, GatewayIntentBits, SlashCommandBuilder, Routes, REST } = require("discord.js");
-const fs = require("fs");
+const client=new Client({
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
+intents:[
+GatewayIntentBits.Guilds,
+GatewayIntentBits.GuildMessages,
+GatewayIntentBits.MessageContent
+]
+
 });
 
 
-const REACTION_CHANNEL = "1431294508015816837";
-const SUGGESTION_CHANNEL = "1475107874144518217";
-const XP_CHANNEL = "1433107389476769952";
-const COUNT_CHANNEL = "1475107452709241004";
+
+const REACTION_CHANNEL="1431294508015816837";
+const SUGGESTION_CHANNEL="1475107874144518217";
+const XP_CHANNEL="1433107389476769952";
+const COUNT_CHANNEL="1475107452709241004";
 
 
-if (!fs.existsSync("xp.json")) fs.writeFileSync("xp.json", "{}");
 
-if (!fs.existsSync("count.json")) {
-  fs.writeFileSync("count.json", JSON.stringify({
-    number: 0,
-    lastUser: ""
-  }));
+
+
+let xpData={};
+let countData={number:0,lastUser:""};
+let dailyData={};
+
+try{
+xpData=JSON.parse(fs.readFileSync("xp.json"));
+}catch{}
+
+try{
+countData=JSON.parse(fs.readFileSync("count.json"));
+}catch{}
+
+
+
+
+
+setInterval(()=>{
+
+fs.writeFileSync("xp.json",JSON.stringify(xpData,null,2));
+fs.writeFileSync("count.json",JSON.stringify(countData,null,2));
+
+},30000);
+
+
+
+client.once("ready",()=>{
+
+console.log("Javion Online");
+
+});
+
+
+
+client.on("messageCreate",async msg=>{
+
+if(msg.author.bot)return;
+
+
+/* AUTO REACTION */
+
+if(msg.channel.id===REACTION_CHANNEL){
+
+msg.react("👋");
+
 }
 
 
-client.once("ready", () => {
-  console.log(`Javion is online as ${client.user.tag}`);
+
+
+
+if(!xpData[msg.author.id]){
+
+xpData[msg.author.id]={
+
+messages:0,
+xp:0,
+name:msg.author.username
+
+};
+
+}
+
+
+xpData[msg.author.id].messages++;
+
+if(xpData[msg.author.id].messages>=50){
+
+xpData[msg.author.id].messages=0;
+
+xpData[msg.author.id].xp+=1;
+
+let ch=client.channels.cache.get(XP_CHANNEL);
+
+if(ch)
+
+ch.send(`⭐ ${msg.author} gained 1 XP`);
+
+}
+
+
+
+
+
+if(msg.channel.id===COUNT_CHANNEL){
+
+let num=parseInt(msg.content);
+
+
+if(isNaN(num)){
+
+msg.reply("🔢 Please send numbers only");
+
+return;
+
+}
+
+
+
+if(msg.author.id===countData.lastUser){
+
+msg.reply("🚫 You can't count twice!");
+
+msg.react("❌");
+
+return;
+
+}
+
+
+
+if(num===countData.number+1){
+
+countData.number++;
+
+countData.lastUser=msg.author.id;
+
+msg.react("✅");
+
+}
+
+else{
+
+msg.reply(`💥 COUNT RUINED!
+
+Expected:
+
+${countData.number+1}
+
+Restarting from 1`);
+
+msg.react("💥");
+
+countData.number=0;
+countData.lastUser="";
+
+}
+
+
+}
+
+
+
 });
 
 
-client.on("messageCreate", async msg => {
-  if (msg.author.bot) return;
 
-  // ---- Auto Reaction ----
-  if (msg.channel.id === REACTION_CHANNEL) {
-    msg.react("👋");
-  }
+client.on("interactionCreate",async interaction=>{
 
-  // ---- XP SYSTEM ----
-  let xpData = JSON.parse(fs.readFileSync("xp.json"));
-  if (!xpData[msg.author.id]) {
-    xpData[msg.author.id] = { messages: 0, xp: 0, name: msg.author.username };
-  }
+if(!interaction.isChatInputCommand())return;
 
-  xpData[msg.author.id].messages++;
-  if (xpData[msg.author.id].messages >= 50) {
-    xpData[msg.author.id].messages = 0;
-    xpData[msg.author.id].xp++;
-    let ch = client.channels.cache.get(XP_CHANNEL);
-    if (ch) ch.send(`⭐ ${msg.author.username} gained 1 XP`);
-  }
+const name=interaction.commandName;
 
-  fs.writeFileSync("xp.json", JSON.stringify(xpData, null, 2));
 
-  // ---- COUNTING SYSTEM ----
-  if (msg.channel.id === COUNT_CHANNEL) {
-    let data = JSON.parse(fs.readFileSync("count.json"));
-    let num = parseInt(msg.content);
-    if (num === data.number + 1 && msg.author.id !== data.lastUser) {
-      data.number++;
-      data.lastUser = msg.author.id;
-      msg.react("✅");
-    } else {
-      msg.react("❌");
-    }
-    fs.writeFileSync("count.json", JSON.stringify(data, null, 2));
-  }
+
+
+
+if(name==="say"){
+
+let text=interaction.options.getString("text");
+
+let embed=new EmbedBuilder()
+
+.setTitle("💬 Message")
+
+.setDescription(`${interaction.user} said:
+
+"${text}"`)
+
+.setColor("Blue");
+
+interaction.reply({embeds:[embed]});
+
+}
+
+
+
+
+
+if(name==="suggestion"){
+
+let text=interaction.options.getString("text");
+
+let embed=new EmbedBuilder()
+
+.setTitle("💡 Suggestion")
+
+.setDescription(`${interaction.user}
+
+"${text}"`)
+
+.setColor("Green");
+
+let ch=client.channels.cache.get(SUGGESTION_CHANNEL);
+
+if(ch)
+
+ch.send({embeds:[embed]});
+
+interaction.reply("✅ Suggestion Sent");
+
+}
+
+
+
+
+
+if(name==="daily"){
+
+let id=interaction.user.id;
+
+let now=Date.now();
+
+if(!dailyData[id])dailyData[id]=0;
+
+
+if(now-dailyData[id]<86400000){
+
+interaction.reply("⏳ You already claimed daily XP");
+
+return;
+
+}
+
+
+let xp=Math.floor(Math.random()*300)+300;
+
+
+if(!xpData[id])
+
+xpData[id]={messages:0,xp:0,name:interaction.user.username};
+
+
+xpData[id].xp+=xp;
+
+dailyData[id]=now;
+
+
+interaction.reply(`🎁 You received ${xp} XP`);
+
+}
+
+
+
+
+
+if(name==="rank"){
+
+let id=interaction.user.id;
+
+if(!xpData[id])
+
+xpData[id]={messages:0,xp:0,name:interaction.user.username};
+
+
+interaction.reply(`⭐ XP:
+
+${xpData[id].xp}`);
+
+}
+
+
+
+
+
+if(name==="avatar"){
+
+let embed=new EmbedBuilder()
+
+.setTitle("🖼 Avatar")
+
+.setImage(interaction.user.displayAvatarURL())
+
+.setColor("Blue");
+
+interaction.reply({embeds:[embed]});
+
+}
+
+
+
+
+if(name==="ping"){
+
+interaction.reply(`🏓 Pong!
+
+${client.ws.ping} ms`);
+
+}
+
+
+
+
+
+if(name==="help"){
+
+interaction.reply(`📚 Commands
+
+/say
+
+/suggestion
+
+/daily
+
+/rank
+
+/avatar
+
+/ping
+
+/help
+
+/leaderboard
+
+/uptime`);
+
+}
+
+
+
+
+
+if(name==="leaderboard"){
+
+let arr=Object.values(xpData)
+
+.sort((a,b)=>b.xp-a.xp)
+
+.slice(0,10);
+
+
+let text="🏆 Leaderboard\n\n";
+
+
+arr.forEach((u,i)=>{
+
+text+=`${i+1}. ${u.name} - ${u.xp} XP\n`;
+
 });
 
 
-client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
+interaction.reply(text);
 
-  const name = interaction.commandName;
+}
 
-  if (name === "info") {
-    interaction.reply("🤖 Javion\nYour server assistant");
-  }
 
-  if (name === "server") {
-    let g = interaction.guild;
-    interaction.reply(`Server: ${g.name}\nMembers: ${g.memberCount}`);
-  }
 
-  if (name === "java") {
-    interaction.reply(`☕ Java — My beloved, My heart, My soul ❤️
-Java is a powerful programming language.
-✨ Platform Independent
-⚡ Fast
-🔒 Secure
-🌎 Popular`);
-  }
+/* UPTIME */
 
-  if (name === "say") {
-    let text = interaction.options.getString("text");
-    interaction.reply(`${interaction.user.username} said:\n${text}`);
-  }
+if(name==="uptime"){
 
-  if (name === "suggestion") {
-    let text = interaction.options.getString("text");
-    let ch = client.channels.cache.get(SUGGESTION_CHANNEL);
-    if (ch) ch.send(`💡 Suggestion by ${interaction.user.username}\n${text}`);
-    interaction.reply("Suggestion sent");
-  }
+let sec=Math.floor(process.uptime());
 
-  if (name === "github") {
-    interaction.reply("Drive-for-Java\nhttps://github.com/Drive-for-Java");
-  }
 
-  if (name === "coin") {
-    let r = Math.random() < 0.5 ? "Heads" : "Tails";
-    interaction.reply("🪙 " + r);
-  }
+interaction.reply(`⏱ Uptime:
 
-  if (name === "leaderboard") {
-    let data = JSON.parse(fs.readFileSync("xp.json"));
-    let arr = Object.values(data).sort((a, b) => b.xp - a.xp).slice(0, 10);
-    let text = "🏆 Leaderboard\n\n";
-    arr.forEach((u, i) => {
-      text += `${i + 1}. ${u.name} - ${u.xp} XP\n`;
-    });
-    interaction.reply(text);
-  }
+${sec} seconds`);
+
+}
+
+
+
 });
 
 
-const commands = [
-  new SlashCommandBuilder().setName("info").setDescription("Bot info"),
-  new SlashCommandBuilder().setName("server").setDescription("Server info"),
-  new SlashCommandBuilder().setName("java").setDescription("Java info"),
-  new SlashCommandBuilder()
-    .setName("say")
-    .setDescription("Repeat message")
-    .addStringOption(o => o.setName("text").setDescription("Message").setRequired(true)),
-  new SlashCommandBuilder()
-    .setName("suggestion")
-    .setDescription("Send suggestion")
-    .addStringOption(o => o.setName("text").setDescription("Suggestion").setRequired(true)),
-  new SlashCommandBuilder().setName("github").setDescription("Github link"),
-  new SlashCommandBuilder().setName("coin").setDescription("Flip coin"),
-  new SlashCommandBuilder().setName("leaderboard").setDescription("XP leaderboard")
-].map(c => c.toJSON());
 
-const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
-(async () => {
-  try {
-    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
-    console.log("Slash commands registered");
-  } catch (err) {
-    console.error("Failed to register slash commands:", err);
-  }
+
+const commands=[
+
+new SlashCommandBuilder()
+
+.setName("say")
+
+.setDescription("Say message")
+
+.addStringOption(o=>o.setName("text").setDescription("Text").setRequired(true)),
+
+
+new SlashCommandBuilder()
+
+.setName("suggestion")
+
+.setDescription("Send suggestion")
+
+.addStringOption(o=>o.setName("text").setDescription("Text").setRequired(true)),
+
+
+new SlashCommandBuilder()
+
+.setName("daily")
+
+.setDescription("Daily XP"),
+
+
+new SlashCommandBuilder()
+
+.setName("rank")
+
+.setDescription("Your XP"),
+
+
+new SlashCommandBuilder()
+
+.setName("avatar")
+
+.setDescription("Your avatar"),
+
+
+new SlashCommandBuilder()
+
+.setName("ping")
+
+.setDescription("Bot speed"),
+
+
+new SlashCommandBuilder()
+
+.setName("help")
+
+.setDescription("Commands"),
+
+
+new SlashCommandBuilder()
+
+.setName("leaderboard")
+
+.setDescription("Leaderboard"),
+
+
+new SlashCommandBuilder()
+
+.setName("uptime")
+
+.setDescription("Bot uptime")
+
+].map(c=>c.toJSON());
+
+
+
+const rest=new REST({version:"10"})
+
+.setToken(process.env.TOKEN);
+
+
+
+(async()=>{
+
+await rest.put(
+
+Routes.applicationCommands(process.env.CLIENT_ID),
+
+{body:commands}
+
+);
+
+console.log("Commands Registered");
+
 })();
+
+
+
+client.login(process.env.TOKEN);
 
 
 client.login(process.env.TOKEN)
